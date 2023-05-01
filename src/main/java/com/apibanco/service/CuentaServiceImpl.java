@@ -18,12 +18,12 @@ public class CuentaServiceImpl implements ICuentaService{
 	@Autowired	
 	private ICuentaRepo cuentaRepo;	
 		
-	public void registrar(Cuenta cuenta) {		
-		cuentaRepo.save(cuenta);
+	public Cuenta registrar(Cuenta cuenta) {		
+		return cuentaRepo.save(cuenta);
 	}
 
-	public void actualizar(Cuenta cuenta) {		
-		cuentaRepo.save(cuenta);
+	public Cuenta actualizar(Cuenta cuenta) {		
+		return cuentaRepo.save(cuenta);
 	}
 
 	public void eliminar(int id) {		

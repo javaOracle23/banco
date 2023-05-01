@@ -29,6 +29,19 @@ public class ClienteController {
 	@Autowired	
 	private IPersonaService iPersonaService;
 	
+	 public void validarExistePersonaPorId(int id) {
+	    	if(!iPersonaService.findById(id).isPresent()) {
+	    		throw new BusinessException(Constantes.WS_REST_MSG_CLIENTE_NO_EXISTE);    		
+	    	} 
+	    }
+	    
+	    public void validarExisteClientePorId(int id) {    	
+	    	if(!iClienteService.findById(id).isPresent()) {
+	    		throw new BusinessException(Constantes.WS_REST_MSG_CLIENTE_NO_EXISTE);    	
+	    	}   
+	    }
+	
+	
     @PostMapping
 	public ResponseEntity<?> insertar(@RequestBody Cliente cliente) throws Exception {   
     	try {
@@ -38,13 +51,11 @@ public class ClienteController {
 			throw new BusinessException(e.getMessage(), e.getCause());
 		} 
     	return new ResponseEntity(Constantes.WS_REST_MSG_REGISTRO_GUARDAR, HttpStatus.OK);    	
-	}
-	
+	}  
+    
     @PutMapping
 	public ResponseEntity<?> actualizar(@RequestBody Cliente cliente) {    	
-    	if(!iPersonaService.findById(cliente.getPersona().getPersonaid()).isPresent() || !iClienteService.findById(cliente.getClienteid()).isPresent()) {
-    		return new ResponseEntity(Constantes.WS_REST_MSG_CLIENTE_NO_EXISTE, HttpStatus.FOUND);    	
-    	} 
+    	validarExistePersonaPorId(cliente.getPersona().getPersonaid());
     	try {
     		iClienteService.actualizar(cliente);
     	}catch (Exception e) {
@@ -56,9 +67,7 @@ public class ClienteController {
     
     @DeleteMapping(value="/{id}")
 	public ResponseEntity<?> eliminar(@PathVariable("id") Integer id) {
-    	if(!iClienteService.findById(id).isPresent()) {
-    		return new ResponseEntity(Constantes.WS_REST_MSG_CLIENTE_NO_EXISTE, HttpStatus.FOUND);    	
-    	}   
+    	validarExisteClientePorId(id);
     	try {
     		iClienteService.eliminar(id);
     	}catch (Exception e) {

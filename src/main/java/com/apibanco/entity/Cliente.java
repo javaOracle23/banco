@@ -9,7 +9,8 @@ import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
-
+//principio solid  abierto/cerrado 
+//la clase Persona esta abierta para extenderse o asociarse y cerrada para modificarse 
 @Entity
 @Table(name = "cliente")
 public class Cliente {
@@ -31,10 +32,10 @@ public class Cliente {
 	
 	
 	
-	public Cliente(String contrasena) {
+	public Cliente() {
 		super();
-		this.contrasena = contrasena;
 	}
+	
 	public Persona getPersona() {
 		return persona;
 	}

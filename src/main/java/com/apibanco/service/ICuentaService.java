@@ -6,8 +6,8 @@ import com.apibanco.entity.Cuenta;
 
 public interface ICuentaService {
 
-	void registrar(Cuenta cuenta);
-	void actualizar(Cuenta cuenta);
+	Cuenta registrar(Cuenta cuenta);
+	Cuenta actualizar(Cuenta cuenta);
 	public void eliminar(int id);
 	Optional<Cuenta> findById(int id);	
 	

@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import com.apibanco.entity.Cliente;
 import com.apibanco.repository.IClienteRepo;
 
+//Principio de inversión de dependencias o  inyección de dependencias en spring
 @Service
 public class ClienteServiceImpl implements IClienteService {
 
@@ -18,12 +19,12 @@ public class ClienteServiceImpl implements IClienteService {
 	@Autowired	
 	private IClienteRepo clienteRepo;
 	
-	public void registrar(Cliente cliente) {
-		clienteRepo.save(cliente);		
+	public Cliente registrar(Cliente cliente) {
+		return clienteRepo.save(cliente);		
 	}
 
-	public void actualizar(Cliente cliente) {
-		clienteRepo.save(cliente);		
+	public Cliente actualizar(Cliente cliente) {
+		return clienteRepo.save(cliente);		
 	}
 
 	public void eliminar(int id) {

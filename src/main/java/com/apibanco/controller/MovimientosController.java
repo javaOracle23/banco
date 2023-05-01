@@ -2,7 +2,6 @@ package com.apibanco.controller;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -45,14 +44,65 @@ public class MovimientosController {
 	
 	@Autowired	
 	private IMovimientoService iMovimientoService;
+		
 	
+	public void validarExiteClientePorId(int id) {
+		if(!iClienteService.findById(id).isPresent()) {
+			throw new BusinessException(Constantes.WS_REST_MSG_CLIENTE_NO_EXISTE);   		
+    	}  
+	}
 	
+	public void validarExiteCuentaPorId(int id) {
+		if(!iCuentaService.findById(id).isPresent()) {
+			throw new BusinessException(Constantes.WS_REST_MSG_CUENTA_NO_EXISTE);   		
+    	}		
+	}
 	
-	public void nuevoSaldoCuenta(Movimientos movimiento,Optional<Cuenta> cuenta) {
-		if(movimiento.getTipomovimiento().equalsIgnoreCase(Constantes.WS_REST_MSG_TIPO_MOVIMIENTO_DEPOSITO)) {
+	public void validarValorSaldoCero(Movimientos movimiento, Optional<Cuenta> cuenta) {		
+		if(validarTipoDeMovimiento(movimiento.getTipomovimiento())) {
+			if(cuenta.get().getSaldoinicial() == Constantes.VALOR_CERO) {
+				throw new BusinessException(Constantes.WS_REST_MSG_SALDO_NO_DISPONIBLE);	
+			}
+		}
+	}
+	
+	public void validarValorSaldoMenorValorMovimiento(Movimientos movimiento, Optional<Cuenta> cuenta) {		
+		if(validarTipoDeMovimiento(movimiento.getTipomovimiento())) {
+			if(cuenta.get().getSaldoinicial() < movimiento.getValor()) {
+				throw new BusinessException(Constantes.WS_REST_MSG_SALDO_NO_DISPONIBLE);	
+			}
+		}
+	}
+	
+	public void validarExisteMovimientoPorId(int id) {    	
+    	if(!iMovimientoService.findById(id).isPresent()){
+    		throw new BusinessException(Constantes.WS_REST_MSG_MOVIMIENTO_NO_EXISTE);    	
+    	}   
+    }
+	
+	 public boolean validarTipoDeMovimiento(String tipoMovimiento) {
+		 boolean bTipoMovimiento = Constantes.VALOR_FALSE;
+		 if(tipoMovimiento.equalsIgnoreCase(Constantes.WS_REST_MSG_TIPO_MOVIMIENTO_DEPOSITO)) {
+			 bTipoMovimiento = Constantes.VALOR_FALSE;
+		 }else if(tipoMovimiento.equalsIgnoreCase(Constantes.WS_REST_MSG_TIPO_MOVIMIENTO_RETIRO)) {
+			 bTipoMovimiento = Constantes.VALOR_TRUE;			
+		 }		
+		 return bTipoMovimiento;
+	 }
+	 
+	 public void validacionesGeneralesMovimientos(Movimientos movimiento,Optional<Cuenta> cuenta) {
+		validarExiteClientePorId(movimiento.getFkclienteid());
+		validarExiteCuentaPorId(movimiento.getFkcuentaid());
+		validarValorSaldoCero(movimiento, cuenta);		
+		validarValorSaldoMenorValorMovimiento(movimiento, cuenta);			
+		nuevoSaldoCuentaPorTipoDeMovimiento(movimiento, cuenta);		
+	}
+	
+	public void nuevoSaldoCuentaPorTipoDeMovimiento(Movimientos movimiento,Optional<Cuenta> cuenta) {
+		if(!validarTipoDeMovimiento(movimiento.getTipomovimiento())) {
 			movimiento.setSaldo(cuenta.get().getSaldoinicial());			
 			cuenta.get().setSaldoinicial(cuenta.get().getSaldoinicial() + movimiento.getValor());	
-		}else if(movimiento.getTipomovimiento().equalsIgnoreCase(Constantes.WS_REST_MSG_TIPO_MOVIMIENTO_RETIRO)) {
+		}else {
 			movimiento.setSaldo(cuenta.get().getSaldoinicial());	
 			cuenta.get().setSaldoinicial(Math.abs(cuenta.get().getSaldoinicial() - movimiento.getValor()));			
 		}		
@@ -61,11 +111,12 @@ public class MovimientosController {
 	public ListaMovimientos obtenerListaDemovimientos(Movimientos movimiento) {
 		Optional<Cuenta> cuenta = iCuentaService.findById(movimiento.getFkcuentaid());
 		Optional<Cliente> cliente = iClienteService.findById(movimiento.getFkclienteid());
-		ListaMovimientos objMov = new ListaMovimientos(movimiento.getFecha(), cliente.get().getPersona().getNombre(), cuenta.get().getNumerocuenta(), cuenta.get().getTipocuenta(),movimiento.getSaldo(),
+		ListaMovimientos objMov = new ListaMovimientos(movimiento.getFecha(), cliente.get().getPersona().getNombre(), 
+				cuenta.get().getNumerocuenta(), cuenta.get().getTipocuenta(),movimiento.getSaldo(),
 				movimiento.getEstado(), movimiento.getValor());		
-		if(movimiento.getTipomovimiento().equalsIgnoreCase(Constantes.WS_REST_MSG_TIPO_MOVIMIENTO_DEPOSITO)) {
+		if(!validarTipoDeMovimiento(movimiento.getTipomovimiento())) {
 			objMov.setSaldoDisponible(objMov.getSaldoInicial() + objMov.getMovimiento());				
-		}else if(movimiento.getTipomovimiento().equalsIgnoreCase(Constantes.WS_REST_MSG_TIPO_MOVIMIENTO_RETIRO)) {
+		}else{
 			objMov.setSaldoDisponible(objMov.getSaldoInicial() - objMov.getMovimiento());		
 		}
 		return objMov;
@@ -87,18 +138,9 @@ public class MovimientosController {
     }	
 	
 	@PostMapping
-	public ResponseEntity<?> insertar(@RequestBody Movimientos movimiento){		
-		if(!iClienteService.findById(movimiento.getFkclienteid()).isPresent()) {
-    		return new ResponseEntity(Constantes.WS_REST_MSG_CLIENTE_NO_EXISTE, HttpStatus.FOUND);    	
-    	}   
-		if(!iCuentaService.findById(movimiento.getFkcuentaid()).isPresent()) {
-    		return new ResponseEntity(Constantes.WS_REST_MSG_CUENTA_NO_EXISTE, HttpStatus.FOUND);    	
-    	}   		
-		Optional<Cuenta> cuenta = iCuentaService.findById(movimiento.getFkcuentaid());	
-		if((cuenta.get().getSaldoinicial() == Constantes.VALOR_CERO || cuenta.get().getSaldoinicial() < movimiento.getValor()) && movimiento.getTipomovimiento().equalsIgnoreCase(Constantes.WS_REST_MSG_TIPO_MOVIMIENTO_RETIRO)) {
-			return new ResponseEntity(Constantes.WS_REST_MSG_SALDO_NO_DISPONIBLE, HttpStatus.BAD_REQUEST);  
-		}		
-		nuevoSaldoCuenta(movimiento, cuenta);		
+	public ResponseEntity<?> insertar(@RequestBody Movimientos movimiento){
+		Optional<Cuenta> cuenta = iCuentaService.findById(movimiento.getFkcuentaid());
+		validacionesGeneralesMovimientos(movimiento, cuenta);
 		try {
 			iCuentaService.actualizar(cuenta.get());
 			iMovimientoService.registrar(movimiento);
@@ -111,17 +153,8 @@ public class MovimientosController {
 	
     @PutMapping
 	public ResponseEntity<?> actualizar(@RequestBody Movimientos movimiento) { 
-    	if(!iClienteService.findById(movimiento.getFkclienteid()).isPresent()) {
-    		return new ResponseEntity(Constantes.WS_REST_MSG_CLIENTE_NO_EXISTE, HttpStatus.FOUND);    	
-    	}  
-    	if(!iCuentaService.findById(movimiento.getFkcuentaid() ).isPresent()) {
-    		return new ResponseEntity(Constantes.WS_REST_MSG_CUENTA_NO_EXISTE, HttpStatus.FOUND);    	
-    	} 
-    	Optional<Cuenta> cuenta = iCuentaService.findById(movimiento.getFkcuentaid());	
-		if((cuenta.get().getSaldoinicial() == Constantes.VALOR_CERO || cuenta.get().getSaldoinicial() < movimiento.getValor()) && movimiento.getTipomovimiento().equalsIgnoreCase(Constantes.WS_REST_MSG_TIPO_MOVIMIENTO_RETIRO)) {
-			return new ResponseEntity(Constantes.WS_REST_MSG_SALDO_NO_DISPONIBLE, HttpStatus.BAD_REQUEST);  
-		}	
-    	nuevoSaldoCuenta(movimiento, cuenta);    	
+    	Optional<Cuenta> cuenta = iCuentaService.findById(movimiento.getFkcuentaid());
+		validacionesGeneralesMovimientos(movimiento, cuenta);	
     	try {
     		iCuentaService.actualizar(cuenta.get());
         	iMovimientoService.actualizar(movimiento);
@@ -130,13 +163,11 @@ public class MovimientosController {
 			throw new BusinessException(e.getMessage(), e.getCause());
 		}	
     	return new ResponseEntity(Constantes.WS_REST_MSG_REGISTRO_ACTULIZAR, HttpStatus.OK);
-	}
-    
+	}  
+       
     @DeleteMapping(value="/{id}")
-	public ResponseEntity<?> eliminar(@PathVariable("id") Integer id) {
-    	if(!iMovimientoService.findById(id).isPresent()) {
-    		return new ResponseEntity(Constantes.WS_REST_MSG_MOVIMIENTO_NO_EXISTE, HttpStatus.FOUND);    	
-    	} 
+	public ResponseEntity<?> eliminar(@PathVariable("id") Integer id){
+    	validarExisteMovimientoPorId(id);    	
     	try {
     		iMovimientoService.eliminar(id);
     	}catch (Exception e) {

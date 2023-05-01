@@ -20,13 +20,13 @@ public class MovimientoServiceImpl implements IMovimientoService {
 	@Autowired	
 	private IMovimientosRepo movimientoRepo;
 	
-	public void registrar(Movimientos movimiento) {
-		movimientoRepo.save(movimiento);
+	public Movimientos registrar(Movimientos movimiento) {
+		return movimientoRepo.save(movimiento);
 		
 	}
 
-	public void actualizar(Movimientos movimiento) {
-		movimientoRepo.save(movimiento);
+	public Movimientos actualizar(Movimientos movimiento) {
+		return movimientoRepo.save(movimiento);
 		
 	}
 

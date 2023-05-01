@@ -27,14 +27,29 @@ public class CuentaController {
 	@Autowired	
 	private ICuentaService iCuentaService;
 	
+	//La clase CuentaController utiliza la interfaz IClienteService y desconoce su implementación.
+	//Principio de inversión de dependencias o  inyección de dependencias en spring
 	@Autowired	
 	private IClienteService iClienteService;
 	
+	
+	public void validarExiteClientePorId(int id) {
+		if(!iClienteService.findById(id).isPresent()) {
+			throw new BusinessException(Constantes.WS_REST_MSG_CLIENTE_NO_EXISTE);   		
+    	}  
+	}	
+	
+	
+	public void validarExiteCuentaPorId(int id) {    	
+    	if(!iCuentaService.findById(id).isPresent()) {
+    		throw new BusinessException(Constantes.WS_REST_MSG_CUENTA_NO_EXISTE);    	
+    	}	
+	}
+	
+	
 	@PostMapping
 	public ResponseEntity<?> insertar(@RequestBody Cuenta cuenta) {
-		if(!iClienteService.findById(cuenta.getFkclienteid()).isPresent()) {
-    		return new ResponseEntity(Constantes.WS_REST_MSG_CLIENTE_NO_EXISTE, HttpStatus.FOUND);    	
-    	}  
+		validarExiteClientePorId(cuenta.getCuentaid());
 		try {
 			iCuentaService.registrar(cuenta);
     	}catch (Exception e) {
@@ -44,11 +59,11 @@ public class CuentaController {
 		return new ResponseEntity(Constantes.WS_REST_MSG_REGISTRO_GUARDAR, HttpStatus.OK);    	
 	}
 	
+	
     @PutMapping
 	public ResponseEntity<?> actualizar(@RequestBody Cuenta cuenta) {    	
-    	if(!iCuentaService.findById(cuenta.getCuentaid()).isPresent()) {
-    		return new ResponseEntity(Constantes.WS_REST_MSG_CUENTA_NO_EXISTE, HttpStatus.FOUND);    	
-    	} 
+    	validarExiteCuentaPorId(cuenta.getCuentaid());
+    	validarExiteClientePorId(cuenta.getFkclienteid() );
     	if(!iClienteService.findById(cuenta.getFkclienteid()).isPresent()) {
     		return new ResponseEntity(Constantes.WS_REST_MSG_CLIENTE_NO_EXISTE, HttpStatus.FOUND);    	
     	}   
@@ -61,11 +76,11 @@ public class CuentaController {
     	return new ResponseEntity(Constantes.WS_REST_MSG_REGISTRO_ACTULIZAR, HttpStatus.OK);
 	}
     
+    
+    
     @DeleteMapping(value="/{id}")
 	public ResponseEntity<?> eliminar(@PathVariable("id") Integer id) {
-    	if(!iCuentaService.findById(id).isPresent()) {
-    		return new ResponseEntity(Constantes.WS_REST_MSG_CUENTA_NO_EXISTE, HttpStatus.FOUND);    	
-    	}
+    	validarExiteCuentaPorId(id);
     	try {
     		iCuentaService.eliminar(id);
     	}catch (Exception e) {

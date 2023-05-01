@@ -1,5 +1,7 @@
 package com.apibanco.utilidades;
 
+import com.apibanco.exception.BusinessException;
+
 public class Constantes {		
 	
 	public static final String WS_REST_MSG_REGISTRO_GUARDAR     = "Registro guardado con exito";
@@ -13,5 +15,8 @@ public class Constantes {
 	public static final String WS_REST_MSG_TIPO_MOVIMIENTO_DEPOSITO = "DEPOSITO";
 	public static final String WS_REST_MSG_SALDO_NO_DISPONIBLE = "Saldo no disponible";
 	public static final int VALOR_CERO = 0;
+	public static final BusinessException VALOR_NULL = null;
+	public static final boolean VALOR_TRUE = true;
+	public static final boolean VALOR_FALSE = false;
 	 
 }

@@ -43,10 +43,10 @@ public class Persona {
 	public int getPersonaid() {
 		return personaid;
 	}
-	public Persona(int personaid) {
+	public Persona() {
 		super();
-		this.personaid = personaid;
 	}
+	
 	public void setPersonaid(int personaid) {
 		this.personaid = personaid;
 	}

@@ -10,8 +10,8 @@ import com.apibanco.entity.Movimientos;
 
 public interface IMovimientoService {
 
-	void registrar(Movimientos cuenta);
-	void actualizar(Movimientos cuenta);
+	Movimientos registrar(Movimientos cuenta);
+	Movimientos actualizar(Movimientos cuenta);
 	public void eliminar(int id);
 	Optional<Movimientos> findById(int id);
 	List<Movimientos> findAllByFechaBetween(Date init,Date fin);
